@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Marks, Percentage & Grade Calculator</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;max-width:800px;margin:36px auto;padding:16px;color:#111}
+    h1{font-size:1.25rem;margin-bottom:8px}
+    label{display:block;margin:12px 0 6px}
+    input[type=number]{padding:8px;width:120px}
+    .subjects{margin-top:16px}
+    .subject-row{display:flex;gap:8px;align-items:center;margin:6px 0}
+    button{padding:8px 12px;margin-top:12px;cursor:pointer}
+    .result{margin-top:18px;padding:12px;border-radius:6px;background:#f6f8fb}
+    .error{color:#b00020}
+  </style>
+</head>
+<body>
+  <h1>Student Percentage & Grade Calculator</h1>
+  <div id="step1">
+    <label for="numSubjects">Enter number of subjects:</label>
+    <input id="numSubjects" type="number" min="1" max="50" value="5" />
+    <button id="makeFields">Create Fields</button>
+    <div id="err1" class="error"></div>
+  </div>
+
+  <form id="marksForm" style="display:none">
+    <div class="subjects" id="subjectsContainer"></div>
+    <button type="submit">Calculate</button>
+    <button type="button" id="resetBtn">Reset</button>
+  </form>
+
+  <div id="output" class="result" style="display:none"></div>
+
+  <script>
+    const numInput = document.getElementById('numSubjects');
+    const makeBtn = document.getElementById('makeFields');
+    const subjectsContainer = document.getElementById('subjectsContainer');
+    const marksForm = document.getElementById('marksForm');
+    const output = document.getElementById('output');
+    const err1 = document.getElementById('err1');
+    const resetBtn = document.getElementById('resetBtn');
+
+    function clearChildren(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+
+    makeBtn.addEventListener('click', ()=>{
+      err1.textContent = '';
+      const n = parseInt(numInput.value,10);
+      if(!n || n < 1 || n > 50){ err1.textContent = 'Please enter a valid number (1-50).'; return; }
+      clearChildren(subjectsContainer);
+      for(let i=1;i<=n;i++){
+        const row = document.createElement('div'); row.className='subject-row';
+        const label = document.createElement('label'); label.textContent = 'Subject '+i+':';
+        label.style.minWidth = '90px';
+        const marks = document.createElement('input'); marks.type='number'; marks.min='0'; marks.max='100'; marks.required=true; marks.value='0'; marks.name = 'mark'+i;
+        const outOf = document.createElement('span'); outOf.textContent = ' / 100';
+        row.appendChild(label); row.appendChild(marks); row.appendChild(outOf);
+        subjectsContainer.appendChild(row);
+      }
+      marksForm.style.display = 'block';
+      output.style.display = 'none';
+    });
+
+    marksForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const inputs = subjectsContainer.querySelectorAll('input[type=number]');
+      if(inputs.length===0) return;
+      let total = 0; let valid=true; let invalidIndex = -1;
+      inputs.forEach((inp, idx)=>{
+        const v = Number(inp.value);
+        if(Number.isNaN(v) || v<0 || v>100){ valid=false; invalidIndex=idx+1; }
+        total += v;
+      });
+      if(!valid){ output.style.display='block'; output.innerHTML = `<div class="error">Invalid mark at subject ${invalidIndex}. Use 0-100.</div>`; return; }
+      const n = inputs.length;
+      const percentage = (total / (n*100)) * 100;
+      const grade = getGrade(percentage);
+      output.style.display='block';
+      output.innerHTML = `
+        <strong>Total Marks:</strong> ${total} / ${n*100}<br>
+        <strong>Percentage:</strong> ${percentage.toFixed(2)}%<br>
+        <strong>Grade:</strong> ${grade}
+      `;
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      marksForm.style.display='none';
+      output.style.display='none';
+      clearChildren(subjectsContainer);
+    });
+
+    function getGrade(p){
+      if(p>=90) return 'A+';
+      if(p>=80) return 'A';
+      if(p>=70) return 'B';
+      if(p>=60) return 'C';
+      if(p>=50) return 'D';
+      return 'F';
+    }
+  </script>
+</body>
+</html>
